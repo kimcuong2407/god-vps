@@ -1,12 +1,15 @@
 from operator import index
 import pandas as pd
+from datetime import datetime
 def read_file(file):
     df = pd.read_csv(file, sep='|', encoding='utf-16')    
     df.columns = ['result', 'order type', "entry", 'sl', 'tp', 'start date', 'end date','extra1','extra2','extra3','extra4']
     result_list = df['result'].tolist()
-    return result_list
+    start_date_list = df['start date'].tolist()
+    end_date_list = df['end date'].tolist()
+    return result_list, start_date_list, end_date_list
 modified_file = read_file('4_Moving_Average_all_signal.txt')
-print(modified_file)
+
 
 def count_consecutive_losses(results):
     consecutive_losses = {'1': 0, '2': 0, '3': 0, '4': 0, 'extra':0}
@@ -22,17 +25,14 @@ def count_consecutive_losses(results):
             current_streak = 0
     return consecutive_losses
 
-test = [1, 1, 2, 2, 2, 2,2,2,2 ,1, 1, 2, 2, 2, 1, 1, 2, 2, 2, 1, 2,2]
-
 # consecutive_losses = count_consecutive_losses(modified_file)
 
 
 
-consecutive_commands = str(input("Nhập chuỗi lệnh muốn tìm: "))
-following_commands = int(input("Nhập số lệnh tiếp theo muốn kiểm tra: "))
+# consecutive_commands = str(input("Nhập chuỗi lệnh muốn tìm: "))
+# following_commands = int(input("Nhập số lệnh tiếp theo muốn kiểm tra: "))
 
-
-def find_consecutive_command(file, command_string, num_commands):
+def find_consecutive_command(file, command_string, num_commands, start_date_str, end_date_str):
     my_list = [int(char) for char in str(command_string)]
     count = 0
     risk = -1
@@ -44,20 +44,36 @@ def find_consecutive_command(file, command_string, num_commands):
                     return True
             return False
     for i in range(len(file)):
-        if file[i:i + len(my_list)] == my_list and i < len(file) - len(my_list):
-            following_list = file[i + len(my_list):i + len(my_list) + num_commands]
+        index_of_real_trade = i + len(my_list)
+        if file[i:i + len(my_list)] == my_list and i < len(file) - len(my_list) and index_of_real_trade < len(file):
+            following_list = [(file[index_of_real_trade])]
+            index_of_end_date = index_of_real_trade
+            while len(following_list) < num_commands and index_of_real_trade < len(file):
+                start_date_desird = datetime.strptime(start_date_str[index_of_real_trade], '%Y.%m.%d %H:%M:%S')
+                end_date_current = datetime.strptime(end_date_str[index_of_end_date], '%Y.%m.%d %H:%M:%S')
+                if start_date_desird > end_date_current:
+                    following_list.append(file[index_of_real_trade])
+                    index_of_end_date += (index_of_real_trade - index_of_end_date)
+                    index_of_real_trade += 1
+                else:
+                    index_of_real_trade += 1
             rr_ratio = sum(reward if num == 1 else risk for num in following_list)
             if is_in_results(rr_ratio, results):
-                index = next((index for index, item in enumerate(results) if item["RR"] == rr_ratio), None)
-                results[index]['soLantimDuoc'] += 1
+                index_of_result = next((index for index, item in enumerate(results) if item["RR"] == rr_ratio), None)
+                results[index_of_result]['soLantimDuoc'] += 1
             else:
                 count = 1
                 results.append({'soLantimDuoc': count, 'RR': rr_ratio})
     return results
 
-test2 = [1, 1, 2, 2, 1, 1,1,2,1,2,2,1,2,2 ,1,1]
+test2 = [1, 1, 2, 2, 1, 1,1,2]
+start = ['2022.01.03 05:00:00', '2022.01.03 12:00:00', '2022.01.03 16:00:00', '2022.01.03 17:00:00', '2022.01.04 18:00:00', '2022.01.04 19:00:00', '2022.01.05 05:00:00', '2022.01.05 07:00:00',]
+end = ['2022.01.03 17:00:00', '2022.01.03 17:00:00', '2022.01.03 17:00:00', '2022.01.03 18:00:00', '2022.01.05 15:00:00', '2022.01.04 22:00:00', '2022.01.05 11:00:00', '2022.01.05 17:00:00',]
 
-output = find_consecutive_command(test2, consecutive_commands, following_commands)
+consecutive_commands = 11211212
+following_commands = 2
+
+output = find_consecutive_command(modified_file[0], consecutive_commands, following_commands, modified_file[1], modified_file[2])
 
 print(output)
 
