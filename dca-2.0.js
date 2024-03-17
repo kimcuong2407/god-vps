@@ -1,7 +1,7 @@
-const rbuy = 5;
-const rsell = 3;
+const buy = 10;
+const sell = 7;
 const rr = 2;
-const volumn = 1;
+const volume = 1;
 
 // input1 : nhập vào số lệnh mà sẽ đạt tới TP
 // logic
@@ -12,31 +12,31 @@ function totalRRWinAndLose(max = 10) {
     let buySell = 'buy';
     const results = [{
         type: buySell,
-        sl: rbuy * volumn,
-        profit: rbuy * volumn * rr,
+        sl: buy * volume,
+        profit: buy * volume * rr,
         tradeNumber: 1,
-        volumn,
+        volume: volume,
     }];
     console.log('Win trade so 1: ', results[0].profit);
     for (let i = 2; i <= max; i++) {
         buySell = buySell == 'buy' ? 'sell' : 'buy';
-        let currentVolumn = results[results.length - 1].volumn;
+        let currentVolume = results[results.length - 1].volume;
         results.push({
             type: buySell,
-            sl: buySell == 'buy' ? rbuy * currentVolumn : rsell * currentVolumn,
-            profit: buySell == 'buy' ? rbuy * currentVolumn * rr : rsell * currentVolumn * rr,
+            sl: buySell == 'buy' ? buy * currentVolume : sell * currentVolume,
+            profit: buySell == 'buy' ? buy * currentVolume * rr : sell * currentVolume * rr,
             tradeNumber: i,
-            volumn: currentVolumn,
+            volume: currentVolume,
         });
         while (calculateProfit(results) < 0) {
             results.pop()
-            currentVolumn++;
+            currentVolume++;
             results.push({
                 type: buySell,
-                sl: buySell == 'buy' ? rbuy * currentVolumn : rsell * currentVolumn,
-                profit: buySell == 'buy' ? rbuy * currentVolumn * rr : rsell * currentVolumn * rr,
+                sl: buySell == 'buy' ? buy * currentVolume : sell * currentVolume,
+                profit: buySell == 'buy' ? buy * currentVolume * rr : sell * currentVolume * rr,
                 tradeNumber: i,
-                volumn: currentVolumn,
+                volume: currentVolume,
             });
         }
         console.log(`Win trade so ${i}: `, calculateProfit(results));
