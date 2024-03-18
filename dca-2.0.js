@@ -10,6 +10,7 @@ const volume = 1;
 
 function totalRRWinAndLose(max = 10) {
     let buySell = 'buy';
+    let volumes = [volume];
     const results = [{
         type: buySell,
         sl: buy * volume,
@@ -39,9 +40,11 @@ function totalRRWinAndLose(max = 10) {
                 volume: currentVolume,
             });
         }
+        volumes.push(currentVolume);
         console.log(`Win trade so ${i}: `, calculateProfit(results));
     }
     console.log(results);
+    console.log(volumes.join('|'));
     return calculateProfit(results);
 }
 
