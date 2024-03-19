@@ -2,12 +2,12 @@
 // TP lệnh 2 được 42$ 
 const pointEarnEachDola = 100;
 
-const firstTradeOrderType = 'buy';
 //dynamic
-const rr = 3;
+const firstTradeOrderType = 'sell';
+const rr = 2;
 const Money1RFirst = 10;
 const points = 200;
-const MoneyWinMinEachTrade = 10;
+const MoneyWinMinEachTrade = 20; // số tiền mà khi đóng all trade nhỏ nhất phải thắng được
 // end dynamic
 const fixedNumber = 2;
 
@@ -81,4 +81,4 @@ function calculateProfit(results) {
     }, 0)
 }
 
-console.log('moneyFirstTp', Money1RFirst, 'lotSizeFirst', lotFirstTrade,);
+console.log('rr: ', rr, 'point: ', points, 'moneyFirstTp', Money1RFirst);
