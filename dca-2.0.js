@@ -1,50 +1,76 @@
-const buy = 10;
-const sell = 7;
-const rr = 2;
-const volume = 1;
+// tp lần 1 được 30$ 
+// TP lệnh 2 được 42$ 
+const pointEarnDola = 100;
+
+const firstTradeOrderType = 'buy';
+//dynamic
+const rr = 3;
+const Money1RFirst = 10;
+const Money1RSecond = 14;
+const xxLot = 5;
+// end dynamic
+const pointWinSize = Money1RFirst * pointEarnDola / xxLot;
+const pointLoseSize = Money1RSecond * pointEarnDola / xxLot;
+const lotSize = 0.01 * xxLot;
+let volume = 1;
+const orderTypeAndMoneyRR = [{
+    'type': firstTradeOrderType,
+    'moneyRR': Money1RFirst,
+}, {
+    'type': firstTradeOrderType == 'buy' ? 'sell' : 'buy',
+    'moneyRR': Money1RSecond,
+}];
 
 // input1 : nhập vào số lệnh mà sẽ đạt tới TP
 // logic
 // vào lệnh Hedge nếu lệnh trước đó SL thì vào lệnh ngược chiều với lệnh trước đó với tỉ lệ RR: 1:3
 // output: số tiền lãi
 
-function totalRRWinAndLose(max = 10) {
-    let buySell = 'buy';
-    let volumes = [volume];
+function totalRRWinAndLose(max) {
+    let currentMoneyRR = orderTypeAndMoneyRR.find(item => item.type == firstTradeOrderType).moneyRR;
     const results = [{
-        type: buySell,
-        sl: buy * volume,
-        profit: buy * volume * rr,
+        type: firstTradeOrderType,
+        sl: currentMoneyRR * volume,
+        tp: currentMoneyRR * volume * rr,
         tradeNumber: 1,
         volume: volume,
+        lot: volume * lotSize,
     }];
-    console.log('Win trade so 1: ', results[0].profit);
+    console.log(`Win trade so ${1}: `, calculateProfit(results));
+
     for (let i = 2; i <= max; i++) {
-        buySell = buySell == 'buy' ? 'sell' : 'buy';
-        let currentVolume = results[results.length - 1].volume;
+        const orderType = results[i - 2].type == 'buy' ? 'sell' : 'buy';
+        let currentMoneyRR = orderTypeAndMoneyRR.find(item => item.type == orderType).moneyRR;
+        let currentVolume = 1;
         results.push({
-            type: buySell,
-            sl: buySell == 'buy' ? buy * currentVolume : sell * currentVolume,
-            profit: buySell == 'buy' ? buy * currentVolume * rr : sell * currentVolume * rr,
+            type: orderType,
+            sl: currentMoneyRR * currentVolume,
+            tp: currentMoneyRR * currentVolume * rr,
             tradeNumber: i,
             volume: currentVolume,
+            lot: currentVolume * lotSize,
         });
-        while (calculateProfit(results) < 0) {
-            results.pop()
+        while (calculateProfit(results) < 5) {
             currentVolume++;
+            results.pop()
             results.push({
-                type: buySell,
-                sl: buySell == 'buy' ? buy * currentVolume : sell * currentVolume,
-                profit: buySell == 'buy' ? buy * currentVolume * rr : sell * currentVolume * rr,
+                type: orderType,
+                sl: currentMoneyRR * currentVolume,
+                tp: currentMoneyRR * currentVolume * rr,
                 tradeNumber: i,
                 volume: currentVolume,
+                lot: currentVolume * lotSize,
             });
         }
-        volumes.push(currentVolume);
         console.log(`Win trade so ${i}: `, calculateProfit(results));
     }
-    console.log(results);
-    console.log(volumes.join('|'));
+    console.log('volumes: ', results.map(i => i.volume).join('|'));
+    console.log(results.map(i => ({
+        sl: i.sl,
+        tp: i.tp,
+        lot: i.lot,
+    })));
+    
     return calculateProfit(results);
 }
 
@@ -52,22 +78,13 @@ function calculateProfit(results) {
     const typeProfit = results[results.length - 1].type;
     return results.reduce((acc, item) => {
         if (item.type == typeProfit) {
-            acc += item.profit;
+            acc += item.tp;
         } else {
-            acc -= item.sl + item.profit;
+            acc -= item.sl + item.tp;
         }
         return acc;
     }, 0)
 }
-function calculateLoss(results) {
-    const typeProfit = results[results.length - 1].type;
-    results.reduce((acc, item) => {
-        if (item.type == typeProfit) {
-            acc += item.profit;
-        } else {
-            acc -= item.sl + item.profit;
-        }
-        return acc;
-    }, 0)
-}
-console.log(totalRRWinAndLose(20));
+totalRRWinAndLose(15);
+
+console.log('pointWinSize', pointWinSize, 'pointLoseSize', pointLoseSize, 'lotSize', lotSize);
