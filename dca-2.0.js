@@ -1,24 +1,24 @@
 // tp lần 1 được 30$ 
 // TP lệnh 2 được 42$ 
-const pointEarnDola = 100;
+const pointEarnEachDola = 100;
 
-const firstTradeOrderType = 'buy';
 //dynamic
-const rr = 3;
+const firstTradeOrderType = 'sell';
+const rr = 2;
 const Money1RFirst = 10;
-const Money1RSecond = 14;
-const xxLot = 5;
+const points = 200;
+const MoneyWinMinEachTrade = 20; // số tiền mà khi đóng all trade nhỏ nhất phải thắng được
 // end dynamic
-const pointWinSize = Money1RFirst * pointEarnDola / xxLot;
-const pointLoseSize = Money1RSecond * pointEarnDola / xxLot;
-const lotSize = 0.01 * xxLot;
+const fixedNumber = 2;
+
+const lotFirstTrade = (Money1RFirst / points).toFixed(fixedNumber);
 let volume = 1;
 const orderTypeAndMoneyRR = [{
     'type': firstTradeOrderType,
-    'moneyRR': Money1RFirst,
+    'lotSize': lotFirstTrade,
 }, {
     'type': firstTradeOrderType == 'buy' ? 'sell' : 'buy',
-    'moneyRR': Money1RSecond,
+    'lotSize': lotFirstTrade,
 }];
 
 // input1 : nhập vào số lệnh mà sẽ đạt tới TP
@@ -27,52 +27,47 @@ const orderTypeAndMoneyRR = [{
 // output: số tiền lãi
 
 function totalRRWinAndLose(max) {
-    let currentMoneyRR = orderTypeAndMoneyRR.find(item => item.type == firstTradeOrderType).moneyRR;
     const results = [{
         type: firstTradeOrderType,
-        sl: currentMoneyRR * volume,
-        tp: currentMoneyRR * volume * rr,
+        sl: Money1RFirst,
+        tp: Money1RFirst * rr,
         tradeNumber: 1,
-        volume: volume,
-        lot: volume * lotSize,
+        lot: lotFirstTrade,
     }];
     console.log(`Win trade so ${1}: `, calculateProfit(results));
 
     for (let i = 2; i <= max; i++) {
-        const orderType = results[i - 2].type == 'buy' ? 'sell' : 'buy';
-        let currentMoneyRR = orderTypeAndMoneyRR.find(item => item.type == orderType).moneyRR;
-        let currentVolume = 1;
+        const lastResult = results[i - 2];
+        let currentLotSize = lotFirstTrade;
+        const orderType = lastResult.type == 'buy' ? 'sell' : 'buy';
         results.push({
             type: orderType,
-            sl: currentMoneyRR * currentVolume,
-            tp: currentMoneyRR * currentVolume * rr,
+            sl: Math.round(currentLotSize * points),
+            tp: Math.round(currentLotSize * points) * rr,
             tradeNumber: i,
-            volume: currentVolume,
-            lot: currentVolume * lotSize,
+            lot: currentLotSize,
         });
-        while (calculateProfit(results) < 5) {
-            currentVolume++;
+        while (calculateProfit(results) < MoneyWinMinEachTrade) {
+            currentLotSize = (parseFloat(currentLotSize) + 0.01).toFixed(fixedNumber);
             results.pop()
             results.push({
                 type: orderType,
-                sl: currentMoneyRR * currentVolume,
-                tp: currentMoneyRR * currentVolume * rr,
+                sl: Math.round(currentLotSize * points),
+                tp: Math.round(currentLotSize * points) * rr,
                 tradeNumber: i,
-                volume: currentVolume,
-                lot: currentVolume * lotSize,
+                lot: currentLotSize,
             });
         }
         console.log(`Win trade so ${i}: `, calculateProfit(results));
     }
-    console.log('volumes: ', results.map(i => i.volume).join('|'));
-    console.log(results.map(i => ({
-        sl: i.sl,
-        tp: i.tp,
-        lot: i.lot,
-    })));
-    
+
+    const lotSize = results.map(i => i.lot).join('|');
+    console.log('lotSize', lotSize);
+    console.log(results);
+
     return calculateProfit(results);
 }
+totalRRWinAndLose(15);
 
 function calculateProfit(results) {
     const typeProfit = results[results.length - 1].type;
@@ -85,6 +80,5 @@ function calculateProfit(results) {
         return acc;
     }, 0)
 }
-totalRRWinAndLose(15);
 
-console.log('pointWinSize', pointWinSize, 'pointLoseSize', pointLoseSize, 'lotSize', lotSize);
+console.log('rr: ', rr, 'point: ', points, 'moneyFirstTp', Money1RFirst);
