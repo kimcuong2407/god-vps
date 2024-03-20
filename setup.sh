@@ -74,7 +74,8 @@ sudo sed -i 's/#Port .*/Port 2222/' /etc/ssh/sshd_config
 
 # Allow SSH traffic on the new port
 sudo ufw allow 2222
-
+# Allow phpmyadmin
+sudo ufw allow 2023
 # Reload UFW to apply the changes
 sudo ufw reload
 
