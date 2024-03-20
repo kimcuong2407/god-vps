@@ -14,8 +14,8 @@ addDomainBackend() {
     echo "Nhap ten mien di:"
     read -p "Ten mien: " domain
     # Insert your command for option 1 here
-    mkdir -p /var/www/$domain/logs/
-    mkdir -p /var/www/$domain/public_html/
+    mkdir -p /home/$domain/logs/
+    mkdir -p /home/$domain/public_html/
     sudo tee /etc/nginx/conf.d/$domain.conf > /dev/null <<EOF
 server {
   listen 80;
@@ -32,11 +32,11 @@ server {
     client_max_body_size 30M;  
 
     # access_log off;
-    access_log /var/www/$domain/logs/access.log;
+    access_log /home/$domain/logs/access.log;
     # error_log off;
-    error_log /var/www/$domain/logs/error.log;
+    error_log /home/$domain/logs/error.log;
 
-    root /var/www/$domain/public_html/public;
+    root /home/$domain/public_html/public;
     index index.php index.html index.htm;
     server_name $domain;
   
@@ -48,8 +48,7 @@ server {
       location ~ \.php$ {
     fastcgi_split_path_info ^(.+\.php)(/.+)$;
           include /etc/nginx/fastcgi_params;
-          #  fastcgi_pass 127.0.0.1:9000;
-          fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+          fastcgi_pass unix:/run/php/php8.1-fpm.sock;
           fastcgi_index index.php;
           fastcgi_connect_timeout 300;
           fastcgi_send_timeout 300;
@@ -59,7 +58,7 @@ server {
           fastcgi_busy_buffers_size 32k;
           fastcgi_temp_file_write_size 32k;
           fastcgi_intercept_errors on;
-          fastcgi_param SCRIPT_FILENAME /var/www/$domain/public_html/public$fastcgi_script_name;
+          fastcgi_param SCRIPT_FILENAME /home/$domain/public_html/public$fastcgi_script_name;
       }
   
         location ~ /\.(?!well-known).* {
@@ -101,7 +100,7 @@ EOF
     
     sudo systemctl restart nginx
     echo "Da tao xong domain $domain"
-    echo "Thu muc chua code: /var/www/$domain/public_html"
+    echo "Thu muc chua code: /home/$domain/public_html"
 }
 
 # Function for option 2
@@ -114,7 +113,7 @@ deleteDomain() {
         [Yy]* )
             sudo rm /etc/nginx/conf.d/$domain.conf
             sudo systemctl restart nginx
-            sudo rm -rf /var/www/$domain
+            sudo rm -rf /home/$domain
             echo "Da xoa xong domain $domain"
         ;;
         * )
@@ -129,8 +128,8 @@ deleteDomain() {
 addDomainFrontend() {
     echo "Nhap ten mien di:"
     read -p "Ten mien: " domain
-    mkdir -p /var/www/$domain/logs/
-    mkdir -p /var/www/$domain/public_html/
+    mkdir -p /home/$domain/logs/
+    mkdir -p /home/$domain/public_html/
     # Insert your command for option 1 here
     sudo tee /etc/nginx/conf.d/$domain.conf > /dev/null <<EOF
 server {
@@ -143,26 +142,33 @@ server {
 server {
     listen 80;
     server_name $domain;
-    access_log /var/www/$domain/logs/access.log;
-    error_log /var/www/$domain/logs/error.log;
+    access_log /home/$domain/logs/access.log;
+    error_log /home/$domain/logs/error.log;
 
-    root /var/www/$domain/public_html;
+    root /home/$domain/public_html;
     index index.php index.html index.htm;
 
-    location / {
-        try_files $uri $uri/ /index.html?$args;
-    }
-    
-    location @rewrites {
-        rewrite ^(.+)$ /index.html last;
-    }
+  location / {
+                try_files $uri $uri/ /index.html?$args;
+        }
+
+        location @rewrites {
+            rewrite ^(.+)$ /index.html last;
+        }
+
+
+
+
 }
+
+
+
 
 EOF
     sudo systemctl restart nginx
     echo "Da tao xong domain $domain"
     
-    echo "Thu muc chua code: /var/www/$domain/public_html"
+    echo "Thu muc chua code: /home/$domain/public_html"
     # Insert your command for option 3 here
 }
 
