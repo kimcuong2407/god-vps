@@ -1,13 +1,13 @@
 // tp lần 1 được 30$ 
 // TP lệnh 2 được 42$ 
-const pointEarnEachDola = 100;
+
 
 //dynamic
 const firstTradeOrderType = 'sell';
 const rr = 2;
-const Money1RFirst = 10;
-const points = 250;
-const MoneyWinMinEachTrade = 10; // số tiền mà khi đóng all trade nhỏ nhất phải thắng được
+const Money1RFirst = 3;
+const points = 300;
+const MoneyWinMinEachTrade = Money1RFirst * 1.2; // số tiền mà khi đóng all trade nhỏ nhất phải thắng được
 const totalTrade = 20;
 // end dynamic
 const fixedNumber = 2;
@@ -26,7 +26,6 @@ const orderTypeAndMoneyRR = [{
 // logic
 // vào lệnh Hedge nếu lệnh trước đó SL thì vào lệnh ngược chiều với lệnh trước đó với tỉ lệ RR: 1:3
 // output: số tiền lãi
-
 function totalRRWinAndLose(max) {
     let totalLot = 0;
     const results = [{
