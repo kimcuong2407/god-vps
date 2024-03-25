@@ -1,18 +1,20 @@
-// tp lần 1 được 30$ 
-// TP lệnh 2 được 42$ 
+// XAG=20 => đánh 0,01 thì 20point = 1$
+// XAU=100 => đánh 0,01 thì 100point = 1$
 
+// mặc định cứ 100 points = 1$ tất cả các cặp có giá trị 
+const RateOneDollarEqualPoint = 100 / 100;
 
 //dynamic
 const firstTradeOrderType = 'sell';
 const rr = 2;
-const Money1RFirst = 3;
+const Money1RFirst = 6;
 const points = 300;
 const MoneyWinMinEachTrade = Money1RFirst * 1.2; // số tiền mà khi đóng all trade nhỏ nhất phải thắng được
-const totalTrade = 20;
+const totalTrade = Math.round(10+ ((rr-1)*10));
 // end dynamic
 const fixedNumber = 2;
+const lotFirstTrade = (Money1RFirst / points / RateOneDollarEqualPoint).toFixed(fixedNumber);
 
-const lotFirstTrade = (Money1RFirst / points).toFixed(fixedNumber);
 let volume = 1;
 const orderTypeAndMoneyRR = [{
     'type': firstTradeOrderType,
@@ -36,7 +38,7 @@ function totalRRWinAndLose(max) {
         lot: lotFirstTrade,
     }];
     totalLot += parseFloat(lotFirstTrade);
-    console.log(`Win trade so ${1}: ${calculateProfit(results)} ---- total Lot: ${totalLot.toFixed(fixedNumber)}`);
+    console.log(`Win trade so ${1}: ${calculateProfit(results)}`);
 
     for (let i = 2; i <= max; i++) {
         const lastResult = results[i - 2];
@@ -49,8 +51,8 @@ function totalRRWinAndLose(max) {
             tradeNumber: i,
             lot: currentLotSize,
         });
-
-        while (calculateProfit(results) < MoneyWinMinEachTrade + (totalLot * 12)) {
+        const totalAddedAfterTrade = i * 0.7 * Money1RFirst;
+        while (calculateProfit(results) < MoneyWinMinEachTrade + (totalLot * 12) + totalAddedAfterTrade) {
             currentLotSize = (parseFloat(currentLotSize) + 0.01).toFixed(fixedNumber);
             results.pop()
             results.push({
