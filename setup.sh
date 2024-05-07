@@ -2,6 +2,7 @@
 
 
 # Install PHP and necessary extensions
+sudo apt update -y
 sudo apt install nginx php8.1 php8.1-fpm php8.1-mysql php-common php8.1-cli php8.1-common php8.1-opcache php8.1-readline php8.1-mbstring php8.1-xml php8.1-gd php8.1-curl php8.1-imagick php8.1-redis php8.1-memcached -y
 
 # Define the configuration file path
@@ -43,18 +44,6 @@ sudo apt install mariadb-server mariadb-client -y
 sudo systemctl start mariadb
 sudo systemctl enable mariadb
 
-
-read -s -p "Enter new password Mariadb for root: " new_password
-echo
-
-# MySQL commands to change root password
-mysql --user=root <<_EOF_
-ALTER USER 'root'@'localhost' IDENTIFIED BY '$new_password';
-FLUSH PRIVILEGES;
-_EOF_
-
-echo "Root password updated successfully."
-
 # Allow Nginx traffic
 sudo ufw allow 'Nginx Full'
 
@@ -74,8 +63,7 @@ sudo sed -i 's/#Port .*/Port 2222/' /etc/ssh/sshd_config
 
 # Allow SSH traffic on the new port
 sudo ufw allow 2222
-# Allow phpmyadmin
-sudo ufw allow 2023
+
 # Reload UFW to apply the changes
 sudo ufw reload
 
@@ -137,31 +125,40 @@ my_ip=$(curl -s https://api64.ipify.org)
 sudo tee /etc/nginx/sites-available/phpmyadmin > /dev/null <<EOL
     server {
             listen 2023;
+
             access_log off;
             log_not_found off;
 
+
             root /usr/share/phpmyadmin;
             index index.php index.html index.htm;
-
+          
 
             location / {
-                try_files $uri $uri/ /index.php?$args;
+                    autoindex on;
+                    try_files $uri $uri/ /index.php;
             }
+
             location ~ \.php$ {
-                include snippets/fastcgi-php.conf;
-                fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
-                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-                include fastcgi_params;
+                    fastcgi_split_path_info ^(.+\.php)(/.+)$;
+                    include /etc/nginx/fastcgi_params;
+                    fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+                    fastcgi_index index.php;
+                    fastcgi_connect_timeout 1000;
+                    fastcgi_send_timeout 1000;
+                    fastcgi_read_timeout 1000;
+                    fastcgi_buffer_size 256k;
+                    fastcgi_buffers 4 256k;
+                    fastcgi_busy_buffers_size 256k;
+                    fastcgi_temp_file_write_size 256k;
+                    fastcgi_intercept_errors on;
+                    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
             }
-
-
 
             location ~ /\. {
                     deny all;
             }
         }
-
-
 EOL
 
 # Create a symbolic link to enable the new configuration
@@ -183,3 +180,11 @@ sudo apt install python3.9 -y
 sudo curl -sL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
 sudo bash nodesource_setup.sh
 sudo apt install nodejs
+
+// install composer
+sudo apt install php-cli unzip
+cd ~
+curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
+HASH=`curl -sS https://composer.github.io/installer.sig`
+php -r "if (hash_file('SHA384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+sudo php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
