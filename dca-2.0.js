@@ -6,7 +6,7 @@ const RateOneDollarEqualPoint = 100 / 100;
 
 //dynamic
 const firstTradeOrderType = 'sell';
-const rr = 2;
+const rr = 1.5;
 const Money1RFirst = 5;
 const points = 500;
 const MoneyWinMinEachTrade = Money1RFirst * 1.2; // số tiền mà khi đóng all trade nhỏ nhất phải thắng được
