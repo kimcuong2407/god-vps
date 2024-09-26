@@ -38,7 +38,7 @@ function totalRRWinAndLose(max) {
         lot: lotFirstTrade,
     }];
     totalLot += parseFloat(lotFirstTrade);
-    console.log(`Win trade so ${1}: ${calculateProfit(results)}`);
+    console.log(`Win trade so ${1}: ${calculateProfit(results)}. Losstrade: ${Money1RFirst}`);
 
     for (let i = 2; i <= max; i++) {
         const lastResult = results[i - 2];
@@ -65,7 +65,7 @@ function totalRRWinAndLose(max) {
         }
 
         totalLot += parseFloat(currentLotSize);
-        console.log(`Win trade so ${i}: ${calculateProfit(results)} ---- total Lot: ${totalLot.toFixed(fixedNumber)}`);
+        console.log(`Win trade so ${i}: ${calculateProfit(results)} ---- total Lot: ${totalLot.toFixed(fixedNumber)} --- totalLot Money: ${totalLot * points * RateOneDollarEqualPoint}`);
     }
 
     const lotSize = results.map(i => i.lot).join('|');
