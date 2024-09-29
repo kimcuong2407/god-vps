@@ -4,10 +4,10 @@ const pointEarnEachDola = 100;
 
 const firstTradeOrderType = 'buy';
 //dynamic
-const rr = 3;
-const Money1RFirst = 10;
-const points = 200;
-const MoneyWinMinEachTrade = 10;
+const rr = 1.5;
+const Money1RFirst = 20;
+const points = 400;
+let MoneyWinMinEachTrade = 10;
 // end dynamic
 const fixedNumber = 2;
 
@@ -36,7 +36,7 @@ function totalRRWinAndLose(max) {
         lot: lotFirstTrade,
     }];
     totalLot += parseFloat(lotFirstTrade);
-    console.log(`Win trade so ${1}: `, calculateProfit(results));
+    console.log(`Win trade so 1: ${calculateProfit(results)} and current lot: ${lotFirstTrade} --- totalLot: ${totalLot}`);
 
     for (let i = 2; i <= max; i++) {
         const lastResult = results[i - 2];
@@ -61,8 +61,10 @@ function totalRRWinAndLose(max) {
                 lot: currentLotSize,
             });
         }
+        MoneyWinMinEachTrade = MoneyWinMinEachTrade + totalLot * 7;
+
         totalLot += parseFloat(currentLotSize);
-        console.log(`Win trade so ${i}: ${calculateProfit(results)} and current totalLot: ${totalLot}`);
+        console.log(`Win trade so ${i}: ${calculateProfit(results)} and current lot: ${currentLotSize} --- totalLot: ${totalLot}`);
     }
 
     const lotSize = results.map(i => i.lot).join('|');
