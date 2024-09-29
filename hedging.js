@@ -27,6 +27,7 @@ const orderTypeAndMoneyRR = [{
 // output: số tiền lãi
 
 function totalRRWinAndLose(max) {
+    let totalLot = 0;
     const results = [{
         type: firstTradeOrderType,
         sl: Money1RFirst,
@@ -34,6 +35,7 @@ function totalRRWinAndLose(max) {
         tradeNumber: 1,
         lot: lotFirstTrade,
     }];
+    totalLot += parseFloat(lotFirstTrade);
     console.log(`Win trade so ${1}: `, calculateProfit(results));
 
     for (let i = 2; i <= max; i++) {
@@ -47,6 +49,7 @@ function totalRRWinAndLose(max) {
             tradeNumber: i,
             lot: currentLotSize,
         });
+
         while (calculateProfit(results) < MoneyWinMinEachTrade) {
             currentLotSize = (parseFloat(currentLotSize) + 0.01).toFixed(fixedNumber);
             results.pop()
@@ -58,12 +61,12 @@ function totalRRWinAndLose(max) {
                 lot: currentLotSize,
             });
         }
-        console.log(`Win trade so ${i}: `, calculateProfit(results));
+        totalLot += parseFloat(currentLotSize);
+        console.log(`Win trade so ${i}: ${calculateProfit(results)} and current totalLot: ${totalLot}`);
     }
 
     const lotSize = results.map(i => i.lot).join('|');
     console.log('lotSize', lotSize);
-    console.log(results);
 
     return calculateProfit(results);
 }
