@@ -1,17 +1,23 @@
-// tp lần 1 được 30$ 
-// TP lệnh 2 được 42$ 
-const pointEarnEachDola = 100;
+const DolaEarnEachOneLot = 100; // số tiền kiếm đc với 1 lot và 100 point
+const pointEarnEachDola = DolaEarnEachOneLot / 100; // số tiền kiếm đc với 100point và lot = 0.01
 
 const firstTradeOrderType = 'buy';
 //dynamic
 const rr = 1.5;
-const Money1RFirst = 5;
-const points = 500;
+const Money1RFirst = 3;
+const points = 300;
 let MoneyWinMinEachTrade = 15;
 // end dynamic
 const fixedNumber = 2;
+const lotFirstTrade = ((Money1RFirst / points) / pointEarnEachDola).toFixed(fixedNumber);
 
-const lotFirstTrade = (Money1RFirst / points).toFixed(fixedNumber);
+const money1RExpected = () => {
+    return points * pointEarnEachDola / 100;
+}
+
+console.log('Money1RFirst % money1RExpected', Money1RFirst % money1RExpected())
+console.log('Money1R Expected', money1RExpected())
+console.log('lotFirstTrade', lotFirstTrade);
 let volume = 1;
 const orderTypeAndMoneyRR = [{
     'type': firstTradeOrderType,
@@ -27,6 +33,10 @@ const orderTypeAndMoneyRR = [{
 // output: số tiền lãi
 
 function totalRRWinAndLose(max) {
+    if (Money1RFirst % money1RExpected() != 0) {
+        console.log('Money1RFirst is not correct');
+        return;
+    }
     let totalLot = 0;
     let moneyWin = Money1RFirst;
     const results = [{
@@ -89,4 +99,4 @@ function calculateProfit(results) {
     }, 0)
 }
 
-console.log('moneyFirstTp', Money1RFirst, 'lotSizeFirst', lotFirstTrade,);
+// console.log('moneyFirstTp', Money1RFirst, 'lotSizeFirst', lotFirstTrade,);
