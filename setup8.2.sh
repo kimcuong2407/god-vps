@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 sudo apt update -y
 sudo apt install -y lsb-release ca-certificates apt-transport-https software-properties-common
 
@@ -11,7 +10,7 @@ sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update -y
 
 # Install PHP 8.2 and necessary extensions
-sudo apt install -y nginx php8.2 php8.2-fpm php8.2-mysql php-common php8.2-cli php8.2-common php8.2-opcache php8.2-readline php8.2-mbstring php8.2-xml php8.2-gd php8.2-curl php8.2-imagick php8.2-redis php8.2-memcached
+sudo apt install -y nginx php8.2 php8.2-fpm php8.2-mysql php-common php8.2-cli php8.2-common php8.2-opcache php8.2-readline php8.2-mbstring php8.2-xml php8.2-gd php8.2-curl php8.2-imagick php8.2-redis php8.2-memcached php8.2-zip
 
 # Define the configuration file path
 php_ini_path="/etc/php/8.2/fpm/php.ini"
@@ -41,7 +40,6 @@ sudo systemctl enable php8.2-fpm
 # Check the status of PHP-FPM
 sudo systemctl status php8.2-fpm
 
-
 curl -LsS -O https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
 sudo bash mariadb_repo_setup --os-type=ubuntu --os-version="jammy" --mariadb-server-version=10.6 -y
 sudo apt-get update -y && sudo apt-get upgrade -y
@@ -50,52 +48,82 @@ sudo apt install mariadb-server mariadb-client -y
 sudo systemctl start mariadb
 sudo systemctl enable mariadb
 
-# Allow Nginx traffic
-sudo ufw allow 'Nginx Full'
+# Cài đặt CSF
+cd /usr/src
+sudo rm -fv csf.tgz
+sudo wget https://download.configserver.com/csf.tgz
+sudo tar -xzf csf.tgz
+cd csf
+sudo sh install.sh
+
+# Cấu hình CSF (ConfigServer Firewall)
+
+# Tắt chế độ TESTING để CSF hoạt động thực tế (0 = tắt chế độ test, 1 = bật chế độ test)
+sudo sed -i 's/TESTING = "1"/TESTING = "0"/' /etc/csf/csf.conf
+
+# Giới hạn truy cập syslog (3 = chỉ cho phép localhost truy cập)
+sudo sed -i 's/RESTRICT_SYSLOG = "0"/RESTRICT_SYSLOG = "3"/' /etc/csf/csf.conf
+
+# Kiểm tra syslog mỗi 300 giây để phát hiện các mối đe dọa
+sudo sed -i 's/SYSLOG_CHECK = "0"/SYSLOG_CHECK = "300"/' /etc/csf/csf.conf
+
+# Bật giám sát cho tất cả người dùng (1 = bật, 0 = tắt)
+sudo sed -i 's/PT_ALL_USERS = "0"/PT_ALL_USERS = "1"/' /etc/csf/csf.conf
+
+# Giới hạn bộ nhớ tối đa cho mỗi người dùng (250MB)
+sudo sed -i 's/PT_USERMEM = "200"/PT_USERMEM = "250"/' /etc/csf/csf.conf
+
+# Giới hạn thời gian chạy tối đa cho mỗi tiến trình (900 giây = 15 phút)
+sudo sed -i 's/PT_USERTIME = "1800"/PT_USERTIME = "900"/' /etc/csf/csf.conf
+
+# Tắt tính năng tự động kill tiến trình của người dùng (0 = tắt, 1 = bật)
+sudo sed -i 's/PT_USERKILL = "1"/PT_USERKILL = "0"/' /etc/csf/csf.conf
+
+# Giới hạn tải hệ thống tối đa (30)
+sudo sed -i 's/PT_LOAD = "30"/PT_LOAD = "30"/' /etc/csf/csf.conf
+
+# Số lõi CPU được tính trong giới hạn tải (5)
+sudo sed -i 's/PT_LOAD_AVG = "5"/PT_LOAD_AVG = "5"/' /etc/csf/csf.conf
+
+# Khoảng thời gian kiểm tra tải hệ thống (300 giây = 5 phút)
+sudo sed -i 's/PT_INTERVAL = "60"/PT_INTERVAL = "300"/' /etc/csf/csf.conf
+
+# Tắt tính năng phát hiện deadlock (0 = tắt, 1 = bật)
+sudo sed -i 's/PT_DEADLOCK = "1"/PT_DEADLOCK = "0"/' /etc/csf/csf.conf
+
+# Mức độ tải hệ thống để kích hoạt cảnh báo (6)
+sudo sed -i 's/PT_LOAD_LEVEL = "6"/PT_LOAD_LEVEL = "6"/' /etc/csf/csf.conf
+
+# Bỏ qua kiểm tra tải trong 15 phút sau khi khởi động lại
+sudo sed -i 's/PT_LOAD_SKIP = "15"/PT_LOAD_SKIP = "15"/' /etc/csf/csf.conf
+
+# Bỏ qua swap khi tính toán tải hệ thống
+sudo sed -i 's/PT_LOAD_IGNORE = "swap"/PT_LOAD_IGNORE = "swap"/' /etc/csf/csf.conf
+
+# Bật báo cáo mở rộng (1 = bật, 0 = tắt)
+sudo sed -i 's/PT_EXT_REPORT = "0"/PT_EXT_REPORT = "1"/' /etc/csf/csf.conf
+
+# Giới hạn số tiến trình tối đa cho mỗi người dùng (10)
+sudo sed -i 's/PT_USERPROC = "10"/PT_USERPROC = "10"/' /etc/csf/csf.conf
 
 
+# Cấu hình ports cho các dịch vụ
+sudo sed -i 's/TCP_IN = "20,21,22,25,53,80,110,143,443,465,587,993,995,2222,2022,2023"/TCP_IN = "20,21,22,25,53,80,110,143,443,465,587,993,995,2222,2022,2023"/' /etc/csf/csf.conf
+sudo sed -i 's/TCP_OUT = "20,21,22,25,53,80,110,113,443,587,993,995,2222,2022,2023"/TCP_OUT = "20,21,22,25,53,80,110,113,443,587,993,995,2222,2022,2023"/' /etc/csf/csf.conf
 
-# Install UFW (if not already installed)
-sudo apt-get install ufw -y
+# Khởi động CSF
+sudo csf -r
 
-# Enable UFW
-sudo ufw enable
-
-# Allow SSH traffic on the default port (optional, if not already allowed)
-sudo ufw allow ssh
-
-# Change the SSH port to 2222
-sudo sed -i 's/#Port .*/Port 2222/' /etc/ssh/sshd_config
-
-# Allow SSH traffic on the new port
-sudo ufw allow 2222
-
-# Reload UFW to apply the changes
-sudo ufw reload
-
-# Restart the SSH service to apply the new port
-
-
-sudo apt install fail2ban
+# Cài đặt fail2ban
+sudo apt install fail2ban -y
 sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
-sudo nano /etc/fail2ban/jail.local
 
-sudo systemctl enable fail2ban
-sudo systemctl start fail2ban
-
-
-
-#!/bin/bash
-
-# Define the Fail2Ban configuration file path
-fail2ban_config="/etc/fail2ban/jail.local"
-
-# Create the Fail2Ban configuration
-sudo tee $fail2ban_config > /dev/null <<EOL
+# Cấu hình fail2ban
+sudo tee /etc/fail2ban/jail.local > /dev/null <<EOL
 [sshd]
 enabled  = true
 filter   = sshd
-action   = ufw
+action   = csf
 logpath  = /var/log/auth.log
 maxretry = 5
 bantime  = 3600
@@ -103,55 +131,40 @@ bantime  = 3600
 [nginx-http-auth]
 enabled  = true
 filter   = nginx-http-auth
-action   = ufw
+action   = csf
 logpath  = /home/fastpod.net/logs/nginx_error.log
 maxretry = 5
 bantime  = 3600
 EOL
 
-# Enable UFW rules for SSH and Nginx ports
-sudo ufw allow 2222/tcp
-sudo ufw allow 2022/tcp
-sudo ufw reload
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
 
-# Restart Fail2Ban to apply the changes
-sudo systemctl restart fail2ban
-
-echo "Fail2Ban has been configured successfully with UFW!"
-
+# Cài đặt phpMyAdmin
 sudo apt install phpmyadmin -y
-
-# Create a symbolic link to the phpMyAdmin installation directory
 sudo ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
 
-# Get the server's public IP address using curl
+# Cấu hình Nginx cho phpMyAdmin
 my_ip=$(curl -s https://api64.ipify.org)
-
-# Set the obtained IP address in the Nginx configuration
 sudo tee /etc/nginx/sites-available/phpmyadmin > /dev/null <<EOL
     server {
             listen 2023;
             access_log /var/log/nginx/phpmyadmin/access.log;
             error_log /var/log/nginx/phpmyadmin/error.log;
 
-
-
             root /usr/share/phpmyadmin;
             index index.php index.html index.htm;
-
 
             location / {
                         try_files $uri $uri/ /index.php?$args;
             }
 
-                location ~ \.php$ {
+            location ~ \.php$ {
                 include snippets/fastcgi-php.conf;
-                fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+                fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
                 fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
                 include fastcgi_params;
             }
-
-
 
             location ~ /\. {
                     deny all;
@@ -159,28 +172,20 @@ sudo tee /etc/nginx/sites-available/phpmyadmin > /dev/null <<EOL
         }
 EOL
 
-# Create a symbolic link to enable the new configuration
 sudo ln -s /etc/nginx/sites-available/phpmyadmin /etc/nginx/sites-enabled/
-
-# Restart Nginx to apply the changes
 sudo systemctl restart nginx
 
-echo "phpMyAdmin has been installed and configured. Access it at http://$my_ip/phpmyadmin"
-
-
-sudo systemctl restart ssh
-
-# install python
-sudo add-apt-repository ppa:deadsnakes/ppa
+# Cài đặt Python 3.9
+sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt install python3.9 -y
 
-#install node 20
+# Cài đặt Node.js 20
 sudo curl -sL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
 sudo bash nodesource_setup.sh
-sudo apt install nodejs
+sudo apt install nodejs -y
 
-// install composer
-sudo apt install php-cli unzip
+# Cài đặt Composer
+sudo apt install php-cli unzip -y
 cd ~
 curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
 HASH=`curl -sS https://composer.github.io/installer.sig`
