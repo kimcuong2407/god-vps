@@ -1,20 +1,23 @@
-// XAG=20 => đánh 0,01 thì 20point = 1$
-// XAU=100 => đánh 0,01 thì 100point = 1$
+const DolaEarnEachOneLot = 100; // số tiền kiếm đc với 1 lot và 100 point
+const pointEarnEachDola = DolaEarnEachOneLot / 100; // số tiền kiếm đc với 100point và lot = 0.01
 
-// mặc định cứ 100 points = 1$ tất cả các cặp có giá trị 
-const RateOneDollarEqualPoint = 100 / 100;
-
+const firstTradeOrderType = 'buy';
 //dynamic
-const firstTradeOrderType = 'sell';
 const rr = 1.5;
-const Money1RFirst = 5;
-const points = 500;
-const MoneyWinMinEachTrade = Money1RFirst * 1.2; // số tiền mà khi đóng all trade nhỏ nhất phải thắng được
-const totalTrade = Math.round(10+ ((rr-1)*10));
+const Money1RFirst = 3;
+const points = 300;
+let MoneyWinMinEachTrade = 15;
 // end dynamic
 const fixedNumber = 2;
-const lotFirstTrade = (Money1RFirst / points / RateOneDollarEqualPoint).toFixed(fixedNumber);
+const lotFirstTrade = ((Money1RFirst / points) / pointEarnEachDola).toFixed(fixedNumber);
 
+const money1RExpected = () => {
+    return points * pointEarnEachDola / 100;
+}
+
+console.log('Money1RFirst % money1RExpected', Money1RFirst % money1RExpected())
+console.log('Money1R Expected', money1RExpected())
+console.log('lotFirstTrade', lotFirstTrade);
 let volume = 1;
 const orderTypeAndMoneyRR = [{
     'type': firstTradeOrderType,
@@ -28,8 +31,14 @@ const orderTypeAndMoneyRR = [{
 // logic
 // vào lệnh Hedge nếu lệnh trước đó SL thì vào lệnh ngược chiều với lệnh trước đó với tỉ lệ RR: 1:3
 // output: số tiền lãi
+
 function totalRRWinAndLose(max) {
+    if (Money1RFirst % money1RExpected() != 0) {
+        console.log('Money1RFirst is not correct');
+        return;
+    }
     let totalLot = 0;
+    let moneyWin = Money1RFirst;
     const results = [{
         type: firstTradeOrderType,
         sl: Money1RFirst,
@@ -37,8 +46,9 @@ function totalRRWinAndLose(max) {
         tradeNumber: 1,
         lot: lotFirstTrade,
     }];
+    console.log('moneyWin', moneyWin);
     totalLot += parseFloat(lotFirstTrade);
-    console.log(`Win trade so ${1}: ${calculateProfit(results)}. Losstrade: ${Money1RFirst}`);
+    console.log(`Win trade so 1: ${calculateProfit(results)} and current lot: ${lotFirstTrade} --- totalLot: ${totalLot}`);
 
     for (let i = 2; i <= max; i++) {
         const lastResult = results[i - 2];
@@ -51,8 +61,10 @@ function totalRRWinAndLose(max) {
             tradeNumber: i,
             lot: currentLotSize,
         });
-        const totalAddedAfterTrade = i * 0.7 * Money1RFirst;
-        while (calculateProfit(results) < MoneyWinMinEachTrade + (totalLot * 12) + totalAddedAfterTrade) {
+
+        moneyWin = moneyWin + MoneyWinMinEachTrade + totalLot * 7;
+        console.log('moneyWin', moneyWin);
+        while (calculateProfit(results) < moneyWin) {
             currentLotSize = (parseFloat(currentLotSize) + 0.01).toFixed(fixedNumber);
             results.pop()
             results.push({
@@ -65,16 +77,15 @@ function totalRRWinAndLose(max) {
         }
 
         totalLot += parseFloat(currentLotSize);
-        console.log(`Win trade so ${i}: ${calculateProfit(results)} ---- total Lot: ${totalLot.toFixed(fixedNumber)} --- totalLot Money: ${totalLot * points * RateOneDollarEqualPoint}`);
+        console.log(`Win trade so ${i}: ${calculateProfit(results)} and current lot: ${currentLotSize} --- totalLot: ${totalLot}`);
     }
 
     const lotSize = results.map(i => i.lot).join('|');
-    console.log(results);
-
     console.log('lotSize', lotSize);
+
     return calculateProfit(results);
 }
-totalRRWinAndLose(totalTrade);
+totalRRWinAndLose(15);
 
 function calculateProfit(results) {
     const typeProfit = results[results.length - 1].type;
@@ -88,4 +99,4 @@ function calculateProfit(results) {
     }, 0)
 }
 
-console.log('rr: ', rr, 'point: ', points, 'moneyFirstTp', Money1RFirst);
+// console.log('moneyFirstTp', Money1RFirst, 'lotSizeFirst', lotFirstTrade,);
