@@ -10,7 +10,7 @@ sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update -y
 
 # Install PHP 8.2 and necessary extensions
-sudo apt install -y nginx php8.2 php8.2-fpm php8.2-mysql php-common php8.2-cli php8.2-common php8.2-opcache php8.2-readline php8.2-mbstring php8.2-xml php8.2-gd php8.2-curl php8.2-imagick php8.2-redis php8.2-memcached php8.2-zip
+sudo apt install -y nginx php8.2 php8.2-fpm php8.2-mysql php-common php8.2-cli php8.2-common php8.2-opcache php8.2-readline php8.2-mbstring php8.2-xml php8.2-gd php8.2-curl php8.2-imagick php8.2-redis php8.2-memcached php8.2-zip php8.2-bcmath
 
 # Define the configuration file path
 php_ini_path="/etc/php/8.2/fpm/php.ini"
